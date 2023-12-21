@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="com.ibm.db2.jdbc.jcc.DB2Driver">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/db2jcc.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
