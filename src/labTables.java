@@ -1,4 +1,3 @@
-
 /**********************************************************************/
 /* labTables.java                                                     */
 /*                                                                    */
@@ -22,8 +21,8 @@
 /* (1) Code the import statement to include the classes and  */
 /*     interfaces for SQL                                    */
 /*************************************************************/
-import java.sql.*;
 
+import java.sql.*;
 import java.io.*;
 import java.util.*;
 import java.math.*;
@@ -35,6 +34,7 @@ public class labTables
         /********************* ???????????? ***************/
         /* (2) Load the DB2Driver                         */
         /**************************************************/
+           //?????.??????? ("???.???.???.????.???.????????");
         Class.forName("com.ibm.db2.jcc.DB2Driver");
     }
     catch (Exception e)
@@ -49,20 +49,23 @@ public class labTables
             /* (3) Code the statement to connect to the DB2 database named    */
             /*     SAMPLE.  Use the Connection object named sample.           */
             /******************************************************************/
-            Connection sample = DriverManager.getConnection("jdbc:db2://192.168.62.128:50000/sample","db2admin","student");
-
+   //?????????? ?????? = ?????????????.?????????????("????:???:??????");
+            final String password = "student";
+            final String user = "db2admin";
+            Connection sample = DriverManager.getConnection("jdbc:db2://192.168.62.128:50000/SAMPLE",user,password);
             /******************* ?????????????????????? ***********************/
             /* ( 4 ) Create the DatabaseMetaData object named dbmd.           */
             /*                                                                */
             /******************************************************************/
+  // ???????????????? ???? = ??????.???????????();
             DatabaseMetaData dbmd = sample.getMetaData();
-
             /******************* ?????????????????????? ***********************/
             /* ( 5 ) Define the String array tableTypes so that the metadata  */
             /*       method getTables will return tables and views            */
             /******************************************************************/
-            String []  tableTypes = {"TABLE", "VIEW"};
+            //String [] ??????????? = {"?????", "????"};
 
+            String [] tableTypes = {"TABLE","VIEW"};
             /******************* ?????????????????????? ***********************/
             /* ( 6 ) Define the ResultSet rs to get the description of the    */
             /*       tables for the schema UDBA.  Use the DatabaseMetaData    */
@@ -70,8 +73,9 @@ public class labTables
             /*       Use the getTables( ) method                              */
             /******************************************************************/
 
-            ResultSet rs = dbmd.getTables(null, "DB2ADMIN", "%",tableTypes);
+            //ResultSet ?? = ????.?????????(null, "UDBA", "%",tableTypes);
 
+            ResultSet rs = dbmd.getTables(null, "db2admin", "%",tableTypes);
             while (rs.next()) {
                 String s = rs.getString(1);
                 System.out.println("\nCatalog Name: " + s + " Schema Name: " + rs.getString(2) +
@@ -84,4 +88,4 @@ public class labTables
             System.exit(1);
         }
     }
-}
+} 
