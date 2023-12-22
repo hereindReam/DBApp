@@ -75,7 +75,7 @@ public class labTables
 
             //ResultSet ?? = ????.?????????(null, "UDBA", "%",tableTypes);
 
-            ResultSet rs = dbmd.getTables(null, "db2admin", "%",tableTypes);
+            ResultSet rs = dbmd.getTables(null, "DB2ADMIN", "%",tableTypes);
             while (rs.next()) {
                 String s = rs.getString(1);
                 System.out.println("\nCatalog Name: " + s + " Schema Name: " + rs.getString(2) +
