@@ -15,6 +15,7 @@ public class LabBLOB extends JFrame {
      * */
     final String user = "db2admin";
     final String password = "student";
+    final String url = "jdbc:db2://192.168.62.128:50000/SAMPLE";
     private final JLabel[] label;//label shows pics
 
     private LabBLOB(){
@@ -31,7 +32,7 @@ public class LabBLOB extends JFrame {
 
         /*int row = (int) Math.sqrt(getCount());*/
 
-        //replace 2
+        //TODO how to replace 2
         JPanel picPanel = new JPanel(new GridLayout(2, 2));
         add(picPanel,BorderLayout.CENTER);
         JPanel actionPanel = new JPanel(new GridLayout(2, 1));
@@ -57,7 +58,7 @@ public class LabBLOB extends JFrame {
     private int getCount(){
         int result;
         try{
-            Connection connection = DriverManager.getConnection("jdbc:db2://192.168.62.128:50000/SAMPLE",user,password);
+            Connection connection = DriverManager.getConnection(url,user,password);
             String countSQL = "SELECT COUNT(*) FROM EMP_PHOTO WHERE PHOTO_FORMAT = 'gif'";
             Statement stmt = connection.createStatement();
             ResultSet rs = stmt.executeQuery(countSQL);
@@ -76,7 +77,7 @@ public class LabBLOB extends JFrame {
 
     private void queryActionListener(){
         try{
-            Connection connection = DriverManager.getConnection("jdbc:db2://192.168.62.128:50000/SAMPLE",user,password);
+            Connection connection = DriverManager.getConnection(url,user,password);
             String picSQL = "SELECT * FROM EMP_PHOTO WHERE PHOTO_FORMAT = 'gif'";
 
             Statement stmt = connection.createStatement();
@@ -93,6 +94,9 @@ public class LabBLOB extends JFrame {
                 i++;
             }
 
+            rs.close();
+            stmt.close();
+            connection.close();
         }catch (SQLException e){
             throw new RuntimeException(e);
         }
@@ -160,7 +164,7 @@ public class LabBLOB extends JFrame {
 
     private void insert(File file,String no,String format){
         try{
-            Connection connection = DriverManager.getConnection("jdbc:db2://192.168.62.128:50000/SAMPLE",user,password);
+            Connection connection = DriverManager.getConnection(url,user,password);
             FileInputStream fis = new FileInputStream(file);
             String insertSQL = "INSERT INTO EMP_PHOTO VALUES (?,?,?)";
             PreparedStatement pstmt = connection.prepareStatement(insertSQL);
