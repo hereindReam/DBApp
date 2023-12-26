@@ -1,4 +1,4 @@
-/********************************************************************/
+package Assignment9; /********************************************************************/
 /* LABADDBATCH.JAVA                                                 */
 /* This program will demonstrate how to use the addbatch() method   */
 /*                                                                  */
@@ -49,13 +49,11 @@ public class labaddbatch
             /*     object named sample.  Use the userid udba and the password  */
             /*     of udba                                                     */
             /*******************************************************************/
-   //?????????? ?????? = DriverManager.getConnection("????:???:??????","????","????");
-            Connection sample = DriverManager.getConnection("jdbc:db2://192.168.62.128:50000/SAMPLE","db2admin","student");
+            Connection sample = DriverManager.getConnection("jdbc:db2://192.168.62.128:50000/SAMPLE","db2admin","student" );
             System.out.println("Connect completed");
             /*********************   ?????????????? ****************************/
             /*  (2) Using the object sample turn autocommit off                */
-            /*******************************************************************/
-   //??????.?????????????(?????);
+            /***************************************labTable****************************/
             sample.setAutoCommit(false);
 
             System.out.println("\nAutocommit set off");
@@ -63,7 +61,12 @@ public class labaddbatch
             /*  (3) Instantiate the Statement object named  stmt               */
             /*******************************************************************/
 
-   //?????????? ???? = ??????.???????????????();
+            /*String test = "select COUNT(*) from ROD ";
+            Statement st = sample.createStatement();
+            ResultSet resultSet = st.executeQuery(test);
+            resultSet.next();
+            System.out.println(resultSet.getString(1));*/
+
             Statement stmt = sample.createStatement();
 
             System.out.println("\n Batch Statements begin ");
@@ -75,8 +78,8 @@ public class labaddbatch
             /*      'BT6', 'BATCH6 NEWYORK','BBBBB1','BTT','NEW YORK CITY6'    */
             /*******************************************************************/
 
-            stmt.addBatch("INSERT INTO db2admin.DEPARTMENT " +
-                    "VALUES ('BT6','BATCH6 NEWYORK','BBBBB1','BTT','NEW YORK CITY6')");    // (4)
+            stmt.addBatch("INSERT INTO DB2ADMIN.DEPARTMENT " +
+                    "VALUES ('BT6','BATCH6 NEWYORK','000070','D21','NEW YORK CITY6')");    // (4)
             /********************  ?????????????????? **************************/
             /*  (5) Add an INSERT statement to list of the commands associated */
             /*      with the object stmt                                       */
@@ -84,8 +87,8 @@ public class labaddbatch
             /*      'BT7', 'BATCH7 NEWYORK','BBBBB2','BT2','NEW YORK CITY7'    */
             /*******************************************************************/
 
-            stmt.addBatch("INSERT INTO db2admin.DEPARTMENT " +
-                    "VALUES ('BT7','BATCH7 NEWYORK','BBBBB2','BT2','NEW YORK CITY7')");    // (5)
+            stmt.addBatch("INSERT INTO DB2ADMIN.DEPARTMENT " +
+                    "VALUES ('BT7','BATCH7 NEWYORK','000020','B01','NEW YORK CITY7')");    // (5)
             /********************  ?????????????????? **************************/
             /*  (6) Add an INSERT statement to list of the commands associated */
             /*      with the object stmt                                       */
@@ -93,8 +96,8 @@ public class labaddbatch
             /*      'BT8', 'BATCH8 NEWYORK','BBBBB3','BT3','NEW YORK CITY8'    */
             /*******************************************************************/
 
-            stmt.addBatch("INSERT INTO db2admin.DEPARTMENT " +
-                    "VALUES ('BT8','BATCH8 NEWYORK','BBBBB3','BT3','NEW YORK CITY8')");    // (6)
+            stmt.addBatch("INSERT INTO DB2ADMIN.DEPARTMENT " +
+                    "VALUES ('BT8','BATCH8 NEWYORK','000030','C01','NEW YORK CITY8')");    // (6)
 
             /********************  ?????????????????? **************************/
             /*  (7) Add an INSERT statement to list of the commands associated */
@@ -103,8 +106,8 @@ public class labaddbatch
             /*      'BT9', 'BATCH9 NEWYORK','BBBBB4','BT4','NEW YORK CITY9'    */
             /*******************************************************************/
 
-            stmt.addBatch("INSERT INTO db2admin.DEPARTMENT " +
-                    "VALUES ('BT9','BATCH9 NEWYORK','BBBBB4','BT4','NEW YORK CITY9')");    // (7)
+            stmt.addBatch("INSERT INTO DB2ADMIN.DEPARTMENT " +
+                    "VALUES ('BT9','BATCH9 NEWYORK','000150','D11','NEW YORK CITY9')");    // (7)
 
             /********************  ?????????????????? **************************/
             /*  (8) Add an INSERT statement to list of the commands associated */
@@ -113,8 +116,8 @@ public class labaddbatch
             /*      'BTA', 'BATCH10 NEWYORK','BBBBB5','BT5','NEW YORK CITY10'  */
             /*******************************************************************/
 
-            stmt.addBatch("INSERT INTO db2admin.DEPARTMENT " +
-                    "VALUES ('BTA','BATCH10 NEWYORK','BBBBB5','BT5','NEW YORK CITY10')");  // (8)
+            stmt.addBatch("INSERT INTO DB2ADMIN.DEPARTMENT " +
+                    "VALUES ('BTA','BATCH10 NEWYORK','000280','E11','NEW YORK CITY10')");  // (8)
             System.out.println("\n Batch statements completed executeBatch follows");
             /********************  ?????????????????? **************************/
             /*  (9) Code a statement that will execute the commands in the     */
@@ -130,7 +133,7 @@ public class labaddbatch
             /* (10) Commit the logical unit of work.  Use the connection       */
             /*      object named sample                                        */
             /*******************************************************************/
-            sample.commit();
+            sample.commit();                                                                     // (10)
         }   // end of try
         catch (BatchUpdateException e) {
             SQLException nextException = e.getNextException();
@@ -149,4 +152,3 @@ public class labaddbatch
         }
     }   // End Main
 }  // End Program
-

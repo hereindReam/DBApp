@@ -149,7 +149,7 @@ public class LabInsert extends JFrame{
             Connection connection = getConnection();
 
 /*//            获取结果集条数，作为data的索引数
-            // TODO: 2023/12/8 can this be a function or I just put it here?
+            //2023/12/8 can this be a function or I just put it here?
             int rowCount = 0;
             String query = "SELECT COUNT(*) FROM templ";
             Statement stm = connection.createStatement();

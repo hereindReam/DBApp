@@ -1,6 +1,8 @@
+package Assignment11;
+
 import java.sql.*;
 
-public class DataAccess_10 {
+public class DataAccess {
 
     public static void main(String[] args) {
         String resume = null;
