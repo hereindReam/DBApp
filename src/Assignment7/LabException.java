@@ -1,3 +1,5 @@
+package Assignment7;
+
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
@@ -6,10 +8,14 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.sql.*;
 
+/**
+* 修改“任务5”的程序，进行异常处理，要求以对话框的形式提示所有的违反约束、类型不匹配、溢出等操纵类错误。
+ * */
+
 /*
 模仿下面截图设计并实现向表TEMPL插入行的操作，GUI界面要求实现单行插入、多行插入、通过子查询插入的功能。
 */
-public class LabNull extends JFrame{
+public class LabException extends JFrame{
 
     /**数据库连接参数*/
     final String url = "jdbc:db2://192.168.62.128:50000/SAMPLE";
@@ -62,7 +68,7 @@ public class LabNull extends JFrame{
         return DriverManager.getConnection(url, name, password);
 
     }
-     public LabNull(){
+     public LabException(){
         super("TEMPL Insert GUI");
         this.setSize(600,400);
         this.setLocation(200,100);
@@ -88,7 +94,7 @@ public class LabNull extends JFrame{
         add(scrollPane,BorderLayout.CENTER);
         add(mainPanel,BorderLayout.EAST);
 
-        header = table.getTableHeader();
+
 
 
         //addListener
@@ -116,56 +122,56 @@ public class LabNull extends JFrame{
         });
     }
 
-    private DefaultTableModel buildTableModel(ResultSet resultSet) throws SQLException {
-        final String nullValue = "空";
-        ResultSetMetaData metaData = resultSet.getMetaData();
-
-        // 获取列数
-        int columnCount = metaData.getColumnCount();
-
-        // 创建表格模型
-        DefaultTableModel tableModel = new DefaultTableModel();
-
-        // 添加列名
-        for (int columnIndex = 1; columnIndex <= columnCount; columnIndex++) {
-            tableModel.addColumn(metaData.getColumnLabel(columnIndex));
-        }
-
-        // 添加数据行
-        while (resultSet.next()) {
-            Object[] rowData = new Object[columnCount];
-            for (int columnIndex = 1; columnIndex <= columnCount; columnIndex++) {
-                Object value = resultSet.getObject(columnIndex);
-                rowData[columnIndex - 1] = resultSet.wasNull() ? nullValue:value;
-            }
-            tableModel.addRow(rowData);
-        }
-
-        return tableModel;
-    }
-
+//    将结果集（增、改、查）中所有为空的列值均以“空”的形式显示
     private void showTable(){
         try {
             Connection connection = getConnection();
-            String sql = "select * from templ";
+//            定义空值
+            String nullValue = "空";
+
+//            获取结果集条数，作为data的索引数
+            // TODO: 2023/12/8 can this be a function or I just put it here?
+            int rowCount = 0;
+            String query = "SELECT COUNT(*) FROM templ";
             Statement stm = connection.createStatement();
+            ResultSet resultSet = stm.executeQuery(query);
+            if (resultSet.next()) {
+                rowCount = resultSet.getInt(1);
+            }
+
+//            表头
+            String[] head = {"EMPNO","FIRSTNME","MIDINIT","LASTNAME",
+                    "WORKDEPT","PHONENO","HIREDATE","JOB",
+                    "EDLEVEL","SEX","BIRTHDATE","SALARY",
+                    "BONUS","COMM"};
+
+            String sql = "select * from templ";
             ResultSet rs = stm.executeQuery(sql);
+            ResultSetMetaData rsmd = rs.getMetaData();
+            int columnCount = rsmd.getColumnCount();
+            int count = 0;
 
-            DefaultTableModel model = buildTableModel(rs);
-            table = new JTable(model);
-            scrollPane = new JScrollPane(table);
+//            数据
+            Object[][] data = new Object[rowCount][columnCount];
 
-            getContentPane().add(scrollPane, BorderLayout.CENTER);
+            while(rs.next()){
+                for (int i = 0; i < columnCount; i++) {
+                    data[count][i] = rs.wasNull() ? nullValue : rs.getObject(i);
+                }
+            }
 
-            setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-            setVisible(true);
+//            生成数据库表
+            table = new JTable(data,head);
 
             connection.close();
-        } catch (ClassNotFoundException | SQLException e) {
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        } catch (SQLException e) {
             throw new RuntimeException(e);
         }
 
     }
+
     // TODO: 2023/12/8  在插入后要更改表的内容
 
     private void SubActionPerformed(ActionEvent e) {
@@ -343,9 +349,45 @@ public class LabNull extends JFrame{
         frame.setVisible(true);
     }
 
+
+    private DefaultTableModel buildTableModel(ResultSet resultSet) throws SQLException {
+        ResultSetMetaData metaData = resultSet.getMetaData();
+
+        // 获取列数
+        int columnCount = metaData.getColumnCount();
+
+        // 创建表格模型
+        DefaultTableModel tableModel = new DefaultTableModel();
+
+        // 添加列名
+        for (int columnIndex = 1; columnIndex <= columnCount; columnIndex++) {
+            tableModel.addColumn(metaData.getColumnLabel(columnIndex));
+        }
+
+        // 添加数据行
+        while (resultSet.next()) {
+            Object[] rowData = new Object[columnCount];
+            for (int columnIndex = 1; columnIndex <= columnCount; columnIndex++) {
+                rowData[columnIndex - 1] = resultSet.getObject(columnIndex);
+            }
+            tableModel.addRow(rowData);
+        }
+
+        return tableModel;
+    }
+    private void initComponents() {
+        table = new JTable();
+        scrollPane = new JScrollPane(table);
+
+        getContentPane().add(scrollPane, BorderLayout.CENTER);
+
+        setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+        setVisible(true);
+    }
+
     public static void main(String[] args) {
         SwingUtilities.invokeLater(()->{
-            LabNull labInsert = new LabNull();
+            LabException labInsert = new LabException();
             labInsert.setVisible(true);
         });
     }
