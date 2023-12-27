@@ -1,13 +1,20 @@
+package Assignment5;
+
+import com.ibm.db2.jcc.DB2SimpleDataSource;
+
 import javax.swing.*;
 
+import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
 import javax.swing.JTable;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.ContainerEvent;
+import java.math.BigDecimal;
 import java.sql.*;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 
 /*
 模仿下面截图设计并实现向表TEMPL插入行的操作，GUI界面要求实现单行插入、多行插入、通过子查询插入的功能。
@@ -38,6 +45,7 @@ public class LabInsert extends JFrame{
     /**
      * 单行插入文本框
      */
+    private JTextField[] singleInsertField;
     private JTextField singleInsertField1;//empno
     private JTextField singleInsertField2;//firstnme
     private JTextField singleInsertField3;//lastname
@@ -46,6 +54,7 @@ public class LabInsert extends JFrame{
     /**
      * 多行插入
      * */
+    private JTextArea[] mulInsertField;
     private JTextArea mulNo;
     private JTextArea mulFirstname;
     private JTextArea mulLastname;
@@ -65,13 +74,12 @@ public class LabInsert extends JFrame{
         return DriverManager.getConnection(url, name, password);
 
     }
-     public LabInsert(){
+    public LabInsert(){
         super("TEMPL Insert GUI");
         this.setSize(600,400);
         this.setLocation(200,100);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         //component
-
 
         this.scrollPane = new JScrollPane(table);
         this.bSingle = new JButton("单行插入");
@@ -81,30 +89,42 @@ public class LabInsert extends JFrame{
         showTable();
 
         mainPanel = new JPanel(new GridLayout(3,1));
+        /*mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.Y_AXIS));
 
+        bSingle.setAlignmentX(Component.CENTER_ALIGNMENT);
+        bMul.setAlignmentX(Component.CENTER_ALIGNMENT);
+        bSub.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        bSingle.setBorder(new EmptyBorder(10, 0, 10, 0)); // 10 pixels gap above and below the button
+        bMul.setBorder(new EmptyBorder(10, 0, 10, 0)); // 10 pixels gap above and below the button
+        bSub.setBorder(new EmptyBorder(10, 0, 10, 0)); // 10 pixels gap above and below the button
+*/
         mainPanel.add(bSingle);
         mainPanel.add(bMul);
         mainPanel.add(bSub);
 
         this.setLayout(new BorderLayout());
-
         add(scrollPane,BorderLayout.CENTER);
         add(mainPanel,BorderLayout.EAST);
 
-
-
+        /*// Set button positions
+        bSingle.setBounds(20, 20, 100, 30);
+        bMul.setBounds(20, 70, 100, 30);
+        bSub.setBounds(20, 120, 100, 30);*/
 
         //addListener
         this.bSingle.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 singleActionPerformed(e);
+                showTable();
             }
         });
         this.bMul.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 MulActionPerformed(e);
+                showTable();
             }
         });
 
@@ -112,6 +132,7 @@ public class LabInsert extends JFrame{
             @Override
             public void actionPerformed(ActionEvent e) {
                 SubActionPerformed(e);
+                showTable();
             }
         });
     }
@@ -148,34 +169,9 @@ public class LabInsert extends JFrame{
         try {
             Connection connection = getConnection();
 
-/*//            获取结果集条数，作为data的索引数
-            //2023/12/8 can this be a function or I just put it here?
-            int rowCount = 0;
-            String query = "SELECT COUNT(*) FROM templ";
-            Statement stm = connection.createStatement();
-            ResultSet resultSet = stm.executeQuery(query);
-            if (resultSet.next()) {
-                rowCount = resultSet.getInt(1);
-            }*/
-
             String sql = "select * from templ";
             Statement stm = connection.createStatement();
             ResultSet rs = stm.executeQuery(sql);
-
-           /* ResultSetMetaData rsmd = rs.getMetaData();
-            int columnCount = rsmd.getColumnCount();
-            int count = 0;*/
-
-/*
-//            数据
-            Object[][] data = new Object[rowCount][columnCount];
-
-            while(rs.next()){
-                for (int i = 0; i < columnCount; i++) {
-                    data[count][i] = rs.getObject(i);
-                }
-            }
-*/
 
             DefaultTableModel model = buildTableModel(rs);
             table = new JTable(model);
@@ -316,50 +312,94 @@ public class LabInsert extends JFrame{
 
     private void singleActionPerformed(ActionEvent e){
         JFrame frame = new JFrame("Database Insert Example");
-        frame.setSize(350, 200);
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setSize(350, 500);
+        /*frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);*/
 
         JPanel panel = new JPanel();
         frame.add(panel);
         panel.setLayout(null);
 
-        singleInsertField1 = new JTextField("编号",20);
-        singleInsertField1.setBounds(10,20,165,25);
-        panel.add(singleInsertField1);
+        String[] labels = {"编号", "名字","中间名", "姓氏", "员工公寓","电话号码","雇佣日期","职位","教育水平","性别","出生日期","月薪","奖金","佣金"};
+        JTextField[] fields = new JTextField[labels.length];
 
-        singleInsertField2 = new JTextField("名字",20);
-        singleInsertField2.setBounds(10,50,165,25);
-        panel.add(singleInsertField2);
+        JScrollPane scrollPane = new JScrollPane(panel);
+        scrollPane.setBounds(0, 0, 350, 200);
+        frame.add(scrollPane);
 
-        singleInsertField3 = new JTextField("姓氏",20);
-        singleInsertField3.setBounds(10,80,165,25);
-        panel.add(singleInsertField3);
+        for (int i = 0; i < labels.length; i++) {
+            JLabel label = new JLabel(labels[i]);
+            label.setBounds(10, 20 + i * 30, 80, 25);
+            panel.add(label);
 
-        singleInsertField4 = new JTextField("教育水平",20);
-        singleInsertField4.setBounds(10,110,165,25);
-        panel.add(singleInsertField4);
+            fields[i] = new JTextField(20);
+            fields[i].setBounds(100, 20 + i * 30, 165, 25);
+            panel.add(fields[i]);
+        }
 
         JButton button = new JButton("Insert");
-        button.setBounds(10, 140, 80, 25);
+        button.setBounds(10, 20 + labels.length * 30, 80, 25);
         panel.add(button);
 
         button.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                String empno = singleInsertField1.getText();
-                String first = singleInsertField2.getText();
-                String last = singleInsertField3.getText();
-                String level = singleInsertField4.getText();
+                //"编号", "名字","中间名", "姓氏", "员工公寓","电话号码",
+                // "雇佣日期","职位","教育水平","性别","出生日期","月薪","奖金","佣金"
+                String[] column = new String[labels.length];
+                for (int i = 0; i < labels.length; i++) {
+                    column[i] = fields[i].getText();
+                }
 
-                int no = Integer.parseInt(empno);
-                int edlevel = Integer.parseInt(level);
+                Timestamp hireTime = null,birthTime = null;
+
+                BigDecimal salary = null;
+                if (!column[11].isEmpty()) {
+                    salary = new BigDecimal(column[11]);
+                }
+
+                BigDecimal bonus = null;
+                if (!column[12].isEmpty()) {
+                    bonus = new BigDecimal(column[12]);
+                }
+
+                BigDecimal comm = null;
+                if (!column[13].isEmpty()) {
+                    comm = new BigDecimal(column[13]);
+                }
+                //TODO how to avoid hard-code?
+                String pattern = "yyyy-MM-dd hh:mm:ss";
+                SimpleDateFormat dateFormat = new SimpleDateFormat(pattern);
+                try {
+                    //special process
+                    if (!column[6].isEmpty()) {
+                        Date parsedDate = (Date) dateFormat.parse(column[6]);
+                        hireTime = new java.sql.Timestamp(parsedDate.getTime());
+                    }
+                    if (!column[10].isEmpty()) {
+                        Date parsedDate = (Date) dateFormat.parse(column[10]);
+                        birthTime = new java.sql.Timestamp(parsedDate.getTime());
+                    }
+                } catch (ParseException ex) {
+                    throw new RuntimeException(ex);
+                }
                 try {
                     Connection conn = getConnection();
-                    String sql = "insert into templ(empno,firstnme,lastname,edlevel) values(?,?,?,?)";
+                    String sql = "insert into templ values(?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
                     PreparedStatement pstmt = conn.prepareStatement(sql);
-                    pstmt.setInt(1, no);
-                    pstmt.setString(2, first);
-                    pstmt.setString(3, last);
-                    pstmt.setInt(4, edlevel);
+                    for (int i = 0; i < labels.length; i++) {
+                        if (!column[i].isEmpty()) {
+                            pstmt.setString(i+1,column[i]);
+                        }else{
+                            pstmt.setNull(i+1,Types.CHAR);
+                        }
+
+                    }
+
+                    pstmt.setTimestamp(7,hireTime);
+                    pstmt.setTimestamp(11,birthTime);
+                    pstmt.setBigDecimal(12,salary);
+                    pstmt.setBigDecimal(13,bonus);
+                    pstmt.setBigDecimal(14,comm);
+
                     pstmt.executeUpdate();
                     conn.close();
                 } catch (ClassNotFoundException ex) {
