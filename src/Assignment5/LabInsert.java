@@ -75,7 +75,7 @@ public class LabInsert extends JFrame{
 
     }
     public LabInsert(){
-        super("TEMPL Insert GUI");
+        super("TEMPL");
         this.setSize(600,400);
         this.setLocation(200,100);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -89,16 +89,7 @@ public class LabInsert extends JFrame{
         showTable();
 
         mainPanel = new JPanel(new GridLayout(3,1));
-        /*mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.Y_AXIS));
 
-        bSingle.setAlignmentX(Component.CENTER_ALIGNMENT);
-        bMul.setAlignmentX(Component.CENTER_ALIGNMENT);
-        bSub.setAlignmentX(Component.CENTER_ALIGNMENT);
-
-        bSingle.setBorder(new EmptyBorder(10, 0, 10, 0)); // 10 pixels gap above and below the button
-        bMul.setBorder(new EmptyBorder(10, 0, 10, 0)); // 10 pixels gap above and below the button
-        bSub.setBorder(new EmptyBorder(10, 0, 10, 0)); // 10 pixels gap above and below the button
-*/
         mainPanel.add(bSingle);
         mainPanel.add(bMul);
         mainPanel.add(bSub);
@@ -106,11 +97,6 @@ public class LabInsert extends JFrame{
         this.setLayout(new BorderLayout());
         add(scrollPane,BorderLayout.CENTER);
         add(mainPanel,BorderLayout.EAST);
-
-        /*// Set button positions
-        bSingle.setBounds(20, 20, 100, 30);
-        bMul.setBounds(20, 70, 100, 30);
-        bSub.setBounds(20, 120, 100, 30);*/
 
         //addListener
         this.bSingle.addActionListener(new ActionListener() {
@@ -197,20 +183,23 @@ public class LabInsert extends JFrame{
     private void SubActionPerformed(ActionEvent e) {
         /**subQuery insert*/
 
-        JFrame frame = new JFrame("Database SubQuery Insert");
-        frame.setSize(370,200);
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        JFrame frame = new JFrame("子查询插入");
+        frame.setSize(370,250);
+        /*frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);*/
 
         JPanel panel = new JPanel();
         frame.add(panel);
         panel.setLayout(null);
+        JLabel sub = new JLabel("请输入子查询内容：");
+        sub.setBounds(10,20,165,20);
+        panel.add(sub);
 
         subQueryField = new JTextField();
-        subQueryField.setBounds(10,20,165,50);
+        subQueryField.setBounds(10,50,165,50);
         panel.add(subQueryField);
 
         JButton button = new JButton("Insert");
-        button.setBounds(10,80,80,25);
+        button.setBounds(10,120,80,25);
         panel.add(button);
 
         subQueryField = new JTextField("子查询",20);
@@ -228,6 +217,7 @@ public class LabInsert extends JFrame{
                     Statement statement = conn.createStatement();
                     statement.executeUpdate(sql);
 
+                    statement.close();
                     conn.close();
                 } catch (ClassNotFoundException ex) {
                     throw new RuntimeException(ex);
@@ -241,77 +231,126 @@ public class LabInsert extends JFrame{
     }
 
     public void MulActionPerformed(ActionEvent e){
-        JFrame frame = new JFrame("Database Multi Insert");
-        frame.setSize(370,200);
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        JFrame frame = new JFrame("多行插入");
+        frame.setSize(500,450);
+        /*frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);*/
 
         JPanel panel = new JPanel();
         frame.add(panel);
         panel.setLayout(null);
 
-        mulNo = new JTextArea();
-        mulNo.setBounds(10,20,100,200);
-        panel.add(mulNo);
+        String[] labels = {"编号", "名字","中间名", "姓氏", "员工公寓","电话号码","雇佣日期","职位","教育水平","性别","出生日期","月薪","奖金","佣金"};
+        JLabel[] labelArray = new JLabel[labels.length];
 
-        mulFirstname = new JTextArea();
-        mulFirstname.setBounds(120,20,100,200);
-        panel.add(mulFirstname);
+        JTextArea[] textAreas = new JTextArea[labels.length];
 
-        mulLastname = new JTextArea();
-        mulLastname.setBounds(230,20,100,200);
-        panel.add(mulLastname);
+        int i=0;
+        for (; i < labels.length/2; i++) {
+            labelArray[i] = new JLabel(labels[i]);
+            labelArray[i].setBounds(10 , 20 + i * 80, 80, 70);
+            panel.add(labelArray[i]);
 
-        mulEdLevel = new JTextArea();
-        mulEdLevel.setBounds(340,20,100,200);
-        panel.add(mulEdLevel);
+            textAreas[i] = new JTextArea();
+            textAreas[i].setBounds(100 , 20 + i * 80, 100, 70);
+            panel.add(textAreas[i]);
+        }
 
+        for(;i < labels.length; i++){
+            labelArray[i] = new JLabel(labels[i]);
+            labelArray[i].setBounds(210 , 20 +( i-labels.length/2) * 80, 80, 70);
+            panel.add(labelArray[i]);
+
+            textAreas[i] = new JTextArea();
+            textAreas[i].setBounds(300 , 20 + ( i-labels.length/2)* 80, 100, 70);
+            panel.add(textAreas[i]);
+        }
         JButton button = new JButton("Insert");
-        button.setBounds(10, 250, 80, 25);
+        button.setBounds(10, 600, 80, 25);
         panel.add(button);
 
+        frame.setVisible(true);
         //添加事件处理
         button.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                String[] empno = mulNo.getText().split("\\n");
-                String[] firstname = mulFirstname.getText().split("\\n");
-                String[] lastname = mulLastname.getText().split("\\n");
-                String[] edlevel = mulEdLevel.getText().split("\\n");
+                String[][] column = new String[labels.length][];
 
-                String sql = "insert into templ(empno,firstnme,lastname,edlevel) values (?,?,?,?)";
+                for (int j = 0; j < labels.length; j++) {
+                    column[j] = textAreas[j].getText().split("\\n");
+                }
+
+                String sql = "insert into templ values(?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+                String pattern = "yyyy-MM-dd hh:mm:ss";
+                SimpleDateFormat dateFormat = new SimpleDateFormat(pattern);
 
                 try {
                     Connection connection = getConnection();
-
                     PreparedStatement preparedStatement = connection.prepareStatement(sql);
 
-                    for (int i = 0; i < empno.length; i++) {
-                        int no = Integer.parseInt(empno[i]);
-                        int level = Integer.parseInt(edlevel[i]);
+                    for (int n = 0; n < column[0].length; n++) {
+                        for (int k = 0; k < labels.length; k++) {
+                            if (n < column[k].length && !column[k][n].isEmpty()) {
+                                preparedStatement.setString(k + 1, column[k][n]);
+                            } else {
+                                preparedStatement.setNull(k + 1, Types.CHAR);
+                            }
 
-                        preparedStatement.setInt(1,no);
-                        preparedStatement.setString(2,firstname[i]);
-                        preparedStatement.setString(3,lastname[i]);
-                        preparedStatement.setInt(4,level);
+                        }
+
+                        Timestamp hireTime = null, birthTime = null;
+                        BigDecimal salary = null;
+                        BigDecimal bonus = null;
+                        BigDecimal comm = null;
+
+                        if (n < column[6].length &&!column[6][n].isEmpty()) {
+                            Date parsedDate = (Date) dateFormat.parse(column[6][n]);
+                            hireTime = new java.sql.Timestamp(parsedDate.getTime());
+                        }
+
+                        if (n < column[10].length&&!column[10][n].isEmpty()) {
+                            Date parsedDate = (Date) dateFormat.parse(column[10][n]);
+                            birthTime = new java.sql.Timestamp(parsedDate.getTime());
+                        }
+
+                        if (n < column[11].length&&!column[11][n].isEmpty()) {
+                            salary = new BigDecimal(column[11][n]);
+                        }
+
+                        if (n < column[12].length&&!column[12][n].isEmpty()) {
+                            bonus = new BigDecimal(column[12][n]);
+                        }
+
+                        if (n < column[13].length&&!column[13][n].isEmpty()) {
+                            comm = new BigDecimal(column[13][n]);
+                        }
+
+                        preparedStatement.setTimestamp(7, hireTime);
+                        preparedStatement.setTimestamp(11, birthTime);
+                        preparedStatement.setBigDecimal(12, salary);
+                        preparedStatement.setBigDecimal(13, bonus);
+                        preparedStatement.setBigDecimal(14, comm);
 
                         preparedStatement.addBatch();
                     }
-
                     preparedStatement.executeBatch();
 
+                    preparedStatement.close();
                     connection.close();
                 } catch (ClassNotFoundException ex) {
                     throw new RuntimeException(ex);
                 } catch (SQLException ex) {
                     throw new RuntimeException(ex);
+                } catch (ParseException ex) {
+                    throw new RuntimeException(ex);
                 }
+
             }
+
         });
-        frame.setVisible(true);
     }
 
     private void singleActionPerformed(ActionEvent e){
-        JFrame frame = new JFrame("Database Insert Example");
+        JFrame frame = new JFrame("单行插入");
         frame.setSize(350, 500);
         /*frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);*/
 
@@ -401,6 +440,7 @@ public class LabInsert extends JFrame{
                     pstmt.setBigDecimal(14,comm);
 
                     pstmt.executeUpdate();
+                    pstmt.close();
                     conn.close();
                 } catch (ClassNotFoundException ex) {
                     throw new RuntimeException(ex);
