@@ -175,7 +175,7 @@ public class LabNull extends JFrame{
     }
 
 
-    // TODO: 2023/12/8  在插入后要更改表的内容
+    //2023/12/8  在插入后要更改表的内容
 
     private void SubActionPerformed(ActionEvent e) {
         /**subQuery insert*/
