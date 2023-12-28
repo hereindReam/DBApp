@@ -1,16 +1,17 @@
 package Assignment7;
 
 import javax.swing.*;
+
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
+import javax.swing.JTable;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.math.BigDecimal;
 import java.sql.*;
-
-/**
-* 修改“任务5”的程序，进行异常处理，要求以对话框的形式提示所有的违反约束、类型不匹配、溢出等操纵类错误。
- * */
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 
 /*
 模仿下面截图设计并实现向表TEMPL插入行的操作，GUI界面要求实现单行插入、多行插入、通过子查询插入的功能。
@@ -41,6 +42,7 @@ public class LabException extends JFrame{
     /**
      * 单行插入文本框
      */
+    private JTextField[] singleInsertField;
     private JTextField singleInsertField1;//empno
     private JTextField singleInsertField2;//firstnme
     private JTextField singleInsertField3;//lastname
@@ -49,6 +51,7 @@ public class LabException extends JFrame{
     /**
      * 多行插入
      * */
+    private JTextArea[] mulInsertField;
     private JTextArea mulNo;
     private JTextArea mulFirstname;
     private JTextArea mulLastname;
@@ -68,13 +71,12 @@ public class LabException extends JFrame{
         return DriverManager.getConnection(url, name, password);
 
     }
-     public LabException(){
-        super("TEMPL Insert GUI");
+    public LabException(){
+        super("TEMPL");
         this.setSize(600,400);
         this.setLocation(200,100);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         //component
-
 
         this.scrollPane = new JScrollPane(table);
         this.bSingle = new JButton("单行插入");
@@ -90,12 +92,8 @@ public class LabException extends JFrame{
         mainPanel.add(bSub);
 
         this.setLayout(new BorderLayout());
-
         add(scrollPane,BorderLayout.CENTER);
         add(mainPanel,BorderLayout.EAST);
-
-
-
 
         //addListener
         this.bSingle.addActionListener(new ActionListener() {
@@ -122,235 +120,9 @@ public class LabException extends JFrame{
         });
     }
 
-//    将结果集（增、改、查）中所有为空的列值均以“空”的形式显示
-    private void showTable(){
-        try {
-            Connection connection = getConnection();
-//            定义空值
-            String nullValue = "空";
-
-//            获取结果集条数，作为data的索引数
-            // TODO: 2023/12/8 can this be a function or I just put it here?
-            int rowCount = 0;
-            String query = "SELECT COUNT(*) FROM templ";
-            Statement stm = connection.createStatement();
-            ResultSet resultSet = stm.executeQuery(query);
-            if (resultSet.next()) {
-                rowCount = resultSet.getInt(1);
-            }
-
-//            表头
-            String[] head = {"EMPNO","FIRSTNME","MIDINIT","LASTNAME",
-                    "WORKDEPT","PHONENO","HIREDATE","JOB",
-                    "EDLEVEL","SEX","BIRTHDATE","SALARY",
-                    "BONUS","COMM"};
-
-            String sql = "select * from templ";
-            ResultSet rs = stm.executeQuery(sql);
-            ResultSetMetaData rsmd = rs.getMetaData();
-            int columnCount = rsmd.getColumnCount();
-            int count = 0;
-
-//            数据
-            Object[][] data = new Object[rowCount][columnCount];
-
-            while(rs.next()){
-                for (int i = 0; i < columnCount; i++) {
-                    data[count][i] = rs.wasNull() ? nullValue : rs.getObject(i);
-                }
-            }
-
-//            生成数据库表
-            table = new JTable(data,head);
-
-            connection.close();
-        } catch (ClassNotFoundException e) {
-            throw new RuntimeException(e);
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
-
-    }
-
-    // TODO: 2023/12/8  在插入后要更改表的内容
-
-    private void SubActionPerformed(ActionEvent e) {
-        /**subQuery insert*/
-
-        JFrame frame = new JFrame("Database SubQuery Insert");
-        frame.setSize(370,200);
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-
-        JPanel panel = new JPanel();
-        frame.add(panel);
-        panel.setLayout(null);
-
-        subQueryField = new JTextField();
-        subQueryField.setBounds(10,20,165,50);
-        panel.add(subQueryField);
-
-        JButton button = new JButton("Insert");
-        button.setBounds(10,80,80,25);
-        panel.add(button);
-
-        subQueryField = new JTextField("子查询",20);
-        panel.add(subQueryField);
-
-        button.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                String sub = subQueryField.getText();
-
-                String sql = "insert into templ" + sub;
-
-                try {
-                    Connection conn = getConnection();
-                    Statement statement = conn.createStatement();
-                    statement.executeUpdate(sql);
-
-                    conn.close();
-                } catch (ClassNotFoundException ex) {
-                    throw new RuntimeException(ex);
-                } catch (SQLException ex) {
-                    throw new RuntimeException(ex);
-                }
-
-            }
-        });
-        frame.setVisible(true);
-    }
-
-    public void MulActionPerformed(ActionEvent e){
-        JFrame frame = new JFrame("Database Multi Insert");
-        frame.setSize(370,200);
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-
-        JPanel panel = new JPanel();
-        frame.add(panel);
-        panel.setLayout(null);
-
-        mulNo = new JTextArea();
-        mulNo.setBounds(10,20,100,200);
-        panel.add(mulNo);
-
-        mulFirstname = new JTextArea();
-        mulFirstname.setBounds(120,20,100,200);
-        panel.add(mulFirstname);
-
-        mulLastname = new JTextArea();
-        mulLastname.setBounds(230,20,100,200);
-        panel.add(mulLastname);
-
-        mulEdLevel = new JTextArea();
-        mulEdLevel.setBounds(340,20,100,200);
-        panel.add(mulEdLevel);
-
-        JButton button = new JButton("Insert");
-        button.setBounds(10, 250, 80, 25);
-        panel.add(button);
-
-        //添加事件处理
-        button.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                String[] empno = mulNo.getText().split("\\n");
-                String[] firstname = mulFirstname.getText().split("\\n");
-                String[] lastname = mulLastname.getText().split("\\n");
-                String[] edlevel = mulEdLevel.getText().split("\\n");
-
-                String sql = "insert into templ(empno,firstnme,lastname,edlevel) values (?,?,?,?)";
-
-                try {
-                    Connection connection = getConnection();
-
-                    PreparedStatement preparedStatement = connection.prepareStatement(sql);
-
-                    for (int i = 0; i < empno.length; i++) {
-                        int no = Integer.parseInt(empno[i]);
-                        int level = Integer.parseInt(edlevel[i]);
-
-                        preparedStatement.setInt(1,no);
-                        preparedStatement.setString(2,firstname[i]);
-                        preparedStatement.setString(3,lastname[i]);
-                        preparedStatement.setInt(4,level);
-
-                        preparedStatement.addBatch();
-                    }
-
-                    preparedStatement.executeBatch();
-
-                    connection.close();
-                } catch (ClassNotFoundException ex) {
-                    throw new RuntimeException(ex);
-                } catch (SQLException ex) {
-                    throw new RuntimeException(ex);
-                }
-            }
-        });
-        frame.setVisible(true);
-    }
-
-    private void singleActionPerformed(ActionEvent e){
-        JFrame frame = new JFrame("Database Insert Example");
-        frame.setSize(350, 200);
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-
-        JPanel panel = new JPanel();
-        frame.add(panel);
-        panel.setLayout(null);
-
-        singleInsertField1 = new JTextField("编号",20);
-        singleInsertField1.setBounds(10,20,165,25);
-        panel.add(singleInsertField1);
-
-        singleInsertField2 = new JTextField("名字",20);
-        singleInsertField2.setBounds(10,50,165,25);
-        panel.add(singleInsertField2);
-
-        singleInsertField3 = new JTextField("姓氏",20);
-        singleInsertField3.setBounds(10,80,165,25);
-        panel.add(singleInsertField3);
-
-        singleInsertField4 = new JTextField("教育水平",20);
-        singleInsertField4.setBounds(10,110,165,25);
-        panel.add(singleInsertField4);
-
-        JButton button = new JButton("Insert");
-        button.setBounds(10, 140, 80, 25);
-        panel.add(button);
-
-        button.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                String empno = singleInsertField1.getText();
-                String first = singleInsertField2.getText();
-                String last = singleInsertField3.getText();
-                String level = singleInsertField4.getText();
-
-                int no = Integer.parseInt(empno);
-                int edlevel = Integer.parseInt(level);
-                try {
-                    Connection conn = getConnection();
-                    String sql = "insert into templ(empno,firstnme,lastname,edlevel) values(?,?,?,?)";
-                    PreparedStatement pstmt = conn.prepareStatement(sql);
-                    pstmt.setInt(1, no);
-                    pstmt.setString(2, first);
-                    pstmt.setString(3, last);
-                    pstmt.setInt(4, edlevel);
-                    pstmt.executeUpdate();
-                    conn.close();
-                } catch (ClassNotFoundException ex) {
-                    throw new RuntimeException(ex);
-                }catch (SQLException ex) {
-                    ex.printStackTrace();
-                }
-            }
-        });
-
-        frame.setVisible(true);
-    }
-
-
     private DefaultTableModel buildTableModel(ResultSet resultSet) throws SQLException {
+
+
         ResultSetMetaData metaData = resultSet.getMetaData();
 
         // 获取列数
@@ -375,16 +147,364 @@ public class LabException extends JFrame{
 
         return tableModel;
     }
-    private void initComponents() {
-        table = new JTable();
-        scrollPane = new JScrollPane(table);
 
-        getContentPane().add(scrollPane, BorderLayout.CENTER);
+    private void showTable(){
+        try {
+            Connection connection = getConnection();
 
-        setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-        setVisible(true);
+            String sql = "select * from templ";
+            Statement stm = connection.createStatement();
+            ResultSet rs = stm.executeQuery(sql);
+
+            DefaultTableModel model = buildTableModel(rs);
+            table = new JTable(model);
+            scrollPane = new JScrollPane(table);
+
+            getContentPane().add(scrollPane, BorderLayout.CENTER);
+
+            setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+            setVisible(true);
+
+            connection.close();
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        } catch (SQLException ex) {
+            // Handle SQL exceptions
+            String message = "SQL Error: " + ex.getMessage();
+            if (ex.getErrorCode() == -104 || ex.getErrorCode() == -199) {
+                message = "SQL Error: Syntax error or access rule violation.";
+            }else if (ex.getErrorCode() == -206) {
+                message = "SQL Error: Column not found.";
+            } else if (ex.getErrorCode() == -803) {
+                message = "SQL Error: Duplicate key value violates unique constraint.";
+            } else if (ex.getErrorCode() == -530) {
+                message = "SQL Error: Foreign key violation.";
+            }else if (ex.getErrorCode() == -407) {
+                message = "SQL Error: Type mismatch.";
+            } else if (ex.getErrorCode() == -802) {
+                message = "SQL Error: Overflow.";
+            }
+            JOptionPane.showMessageDialog(null, message, "Error", JOptionPane.ERROR_MESSAGE);
+        }
     }
 
+
+    // TODO: 2023/12/8  在插入后要更改表的内容
+
+    private void SubActionPerformed(ActionEvent e) {
+        /**subQuery insert*/
+
+        JFrame frame = new JFrame("子查询插入");
+        frame.setSize(370,250);
+        /*frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);*/
+
+        JPanel panel = new JPanel();
+        frame.add(panel);
+        panel.setLayout(null);
+        JLabel sub = new JLabel("请输入子查询内容：");
+        sub.setBounds(10,20,165,20);
+        panel.add(sub);
+
+        subQueryField = new JTextField();
+        subQueryField.setBounds(10,50,165,50);
+        panel.add(subQueryField);
+
+        JButton button = new JButton("Insert");
+        button.setBounds(10,120,80,25);
+        panel.add(button);
+
+        button.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                String sub = subQueryField.getText();
+
+                String sql = "insert into templ " + sub;
+
+                try {
+                    Connection conn = getConnection();
+                    Statement statement = conn.createStatement();
+                    statement.executeUpdate(sql);
+
+                    statement.close();
+                    conn.close();
+                } catch (ClassNotFoundException ex) {
+                    throw new RuntimeException(ex);
+                } catch (SQLException ex) {
+                    // Handle SQL exceptions
+                    String message = "SQL Error: " + ex.getMessage();
+                    if (ex.getErrorCode() == -104 || ex.getErrorCode() == -199) {
+                        message = "SQL Error: Syntax error or access rule violation.";
+                    }else if (ex.getErrorCode() == -206) {
+                        message = "SQL Error: Column not found.";
+                    } else if (ex.getErrorCode() == -803) {
+                        message = "SQL Error: Duplicate key value violates unique constraint.";
+                    } else if (ex.getErrorCode() == -530) {
+                        message = "SQL Error: Foreign key violation.";
+                    }else if (ex.getErrorCode() == -407) {
+                        message = "SQL Error: Type mismatch.";
+                    } else if (ex.getErrorCode() == -802) {
+                        message = "SQL Error: Overflow.";
+                    }
+                    JOptionPane.showMessageDialog(frame, message, "Error", JOptionPane.ERROR_MESSAGE);
+                }
+
+            }
+        });
+        frame.setVisible(true);
+    }
+
+    public void MulActionPerformed(ActionEvent e){
+        JFrame frame = new JFrame("多行插入");
+        frame.setSize(500,450);
+        /*frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);*/
+
+        JPanel panel = new JPanel();
+        frame.add(panel);
+        panel.setLayout(null);
+
+        String[] labels = {"编号", "名字","中间名", "姓氏", "员工公寓","电话号码","雇佣日期","职位","教育水平","性别","出生日期","月薪","奖金","佣金"};
+        JLabel[] labelArray = new JLabel[labels.length];
+
+        JTextArea[] textAreas = new JTextArea[labels.length];
+
+        int i=0;
+        for (; i < labels.length/2; i++) {
+            labelArray[i] = new JLabel(labels[i]);
+            labelArray[i].setBounds(10 , 20 + i * 80, 80, 70);
+            panel.add(labelArray[i]);
+
+            textAreas[i] = new JTextArea();
+            textAreas[i].setBounds(100 , 20 + i * 80, 100, 70);
+            panel.add(textAreas[i]);
+        }
+
+        for(;i < labels.length; i++){
+            labelArray[i] = new JLabel(labels[i]);
+            labelArray[i].setBounds(210 , 20 +( i-labels.length/2) * 80, 80, 70);
+            panel.add(labelArray[i]);
+
+            textAreas[i] = new JTextArea();
+            textAreas[i].setBounds(300 , 20 + ( i-labels.length/2)* 80, 100, 70);
+            panel.add(textAreas[i]);
+        }
+        JButton button = new JButton("Insert");
+        button.setBounds(10, 600, 80, 25);
+        panel.add(button);
+
+        frame.setVisible(true);
+        //添加事件处理
+        button.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                String[][] column = new String[labels.length][];
+
+                for (int j = 0; j < labels.length; j++) {
+                    column[j] = textAreas[j].getText().split("\\n");
+                }
+
+                String sql = "insert into templ values(?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+                String pattern = "yyyy-MM-dd hh:mm:ss";
+                SimpleDateFormat dateFormat = new SimpleDateFormat(pattern);
+
+                try {
+                    Connection connection = getConnection();
+                    PreparedStatement preparedStatement = connection.prepareStatement(sql);
+
+                    for (int n = 0; n < column[0].length; n++) {
+                        for (int k = 0; k < labels.length; k++) {
+                            if (n < column[k].length && !column[k][n].isEmpty()) {
+                                preparedStatement.setString(k + 1, column[k][n]);
+                            } else {
+                                preparedStatement.setNull(k + 1, Types.CHAR);
+                            }
+
+                        }
+
+                        Timestamp hireTime = null, birthTime = null;
+                        BigDecimal salary = null;
+                        BigDecimal bonus = null;
+                        BigDecimal comm = null;
+
+                        if (n < column[6].length &&!column[6][n].isEmpty()) {
+                            Date parsedDate = (Date) dateFormat.parse(column[6][n]);
+                            hireTime = new java.sql.Timestamp(parsedDate.getTime());
+                        }
+
+                        if (n < column[10].length&&!column[10][n].isEmpty()) {
+                            Date parsedDate = (Date) dateFormat.parse(column[10][n]);
+                            birthTime = new java.sql.Timestamp(parsedDate.getTime());
+                        }
+
+                        if (n < column[11].length&&!column[11][n].isEmpty()) {
+                            salary = new BigDecimal(column[11][n]);
+                        }
+
+                        if (n < column[12].length&&!column[12][n].isEmpty()) {
+                            bonus = new BigDecimal(column[12][n]);
+                        }
+
+                        if (n < column[13].length&&!column[13][n].isEmpty()) {
+                            comm = new BigDecimal(column[13][n]);
+                        }
+
+                        preparedStatement.setTimestamp(7, hireTime);
+                        preparedStatement.setTimestamp(11, birthTime);
+                        preparedStatement.setBigDecimal(12, salary);
+                        preparedStatement.setBigDecimal(13, bonus);
+                        preparedStatement.setBigDecimal(14, comm);
+
+                        preparedStatement.addBatch();
+                    }
+                    preparedStatement.executeBatch();
+
+                    preparedStatement.close();
+                    connection.close();
+                } catch (ClassNotFoundException ex) {
+                    throw new RuntimeException(ex);
+                } catch (SQLException ex) {
+                    // Handle SQL exceptions
+                    String message = "SQL Error: " + ex.getMessage();
+                    if (ex.getErrorCode() == -104 || ex.getErrorCode() == -199) {
+                        message = "SQL Error: Syntax error or access rule violation.";
+                    }else if (ex.getErrorCode() == -206) {
+                        message = "SQL Error: Column not found.";
+                    } else if (ex.getErrorCode() == -803) {
+                        message = "SQL Error: Duplicate key value violates unique constraint.";
+                    } else if (ex.getErrorCode() == -530) {
+                        message = "SQL Error: Foreign key violation.";
+                    }else if (ex.getErrorCode() == -407) {
+                        message = "SQL Error: Type mismatch.";
+                    } else if (ex.getErrorCode() == -802) {
+                        message = "SQL Error: Overflow.";
+                    }
+                    JOptionPane.showMessageDialog(frame, message, "Error", JOptionPane.ERROR_MESSAGE);
+                } catch (ParseException ex) {
+                    throw new RuntimeException(ex);
+                }
+
+            }
+
+        });
+    }
+
+    private void singleActionPerformed(ActionEvent e){
+        JFrame frame = new JFrame("单行插入");
+        frame.setSize(350, 500);
+        /*frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);*/
+
+        JPanel panel = new JPanel();
+        frame.add(panel);
+        panel.setLayout(null);
+
+        String[] labels = {"编号", "名字","中间名", "姓氏", "员工公寓","电话号码","雇佣日期","职位","教育水平","性别","出生日期","月薪","奖金","佣金"};
+        JTextField[] fields = new JTextField[labels.length];
+
+        JScrollPane scrollPane = new JScrollPane(panel);
+        scrollPane.setBounds(0, 0, 350, 200);
+        frame.add(scrollPane);
+
+        for (int i = 0; i < labels.length; i++) {
+            JLabel label = new JLabel(labels[i]);
+            label.setBounds(10, 20 + i * 30, 80, 25);
+            panel.add(label);
+
+            fields[i] = new JTextField(20);
+            fields[i].setBounds(100, 20 + i * 30, 165, 25);
+            panel.add(fields[i]);
+        }
+
+        JButton button = new JButton("Insert");
+        button.setBounds(10, 20 + labels.length * 30, 80, 25);
+        panel.add(button);
+
+        button.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                //"编号", "名字","中间名", "姓氏", "员工公寓","电话号码",
+                // "雇佣日期","职位","教育水平","性别","出生日期","月薪","奖金","佣金"
+                String[] column = new String[labels.length];
+                for (int i = 0; i < labels.length; i++) {
+                    column[i] = fields[i].getText();
+                }
+
+                Timestamp hireTime = null,birthTime = null;
+
+                BigDecimal salary = null;
+                if (!column[11].isEmpty()) {
+                    salary = new BigDecimal(column[11]);
+                }
+
+                BigDecimal bonus = null;
+                if (!column[12].isEmpty()) {
+                    bonus = new BigDecimal(column[12]);
+                }
+
+                BigDecimal comm = null;
+                if (!column[13].isEmpty()) {
+                    comm = new BigDecimal(column[13]);
+                }
+                //TODO how to avoid hard-code?
+                String pattern = "yyyy-MM-dd hh:mm:ss";
+                SimpleDateFormat dateFormat = new SimpleDateFormat(pattern);
+                try {
+                    //special process
+                    if (!column[6].isEmpty()) {
+                        Date parsedDate = (Date) dateFormat.parse(column[6]);
+                        hireTime = new java.sql.Timestamp(parsedDate.getTime());
+                    }
+                    if (!column[10].isEmpty()) {
+                        Date parsedDate = (Date) dateFormat.parse(column[10]);
+                        birthTime = new java.sql.Timestamp(parsedDate.getTime());
+                    }
+                } catch (ParseException ex) {
+                    throw new RuntimeException(ex);
+                }
+                try {
+                    Connection conn = getConnection();
+                    String sql = "insert into templ values(?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+                    PreparedStatement pstmt = conn.prepareStatement(sql);
+                    for (int i = 0; i < labels.length; i++) {
+                        if (!column[i].isEmpty()) {
+                            pstmt.setString(i+1,column[i]);
+                        }else{
+                            pstmt.setNull(i+1,Types.CHAR);
+                        }
+
+                    }
+
+                    pstmt.setTimestamp(7,hireTime);
+                    pstmt.setTimestamp(11,birthTime);
+                    pstmt.setBigDecimal(12,salary);
+                    pstmt.setBigDecimal(13,bonus);
+                    pstmt.setBigDecimal(14,comm);
+
+                    pstmt.executeUpdate();
+                    pstmt.close();
+                    conn.close();
+                } catch (ClassNotFoundException ex) {
+                    throw new RuntimeException(ex);
+                }catch (SQLException ex) {
+                    // Handle SQL exceptions
+                    String message = "SQL Error: " + ex.getMessage();
+                    if (ex.getErrorCode() == -104 || ex.getErrorCode() == -199) {
+                        message = "SQL Error: Syntax error or access rule violation.";
+                    }else if (ex.getErrorCode() == -206) {
+                        message = "SQL Error: Column not found.";
+                    } else if (ex.getErrorCode() == -803) {
+                        message = "SQL Error: Duplicate key value violates unique constraint.";
+                    } else if (ex.getErrorCode() == -530) {
+                        message = "SQL Error: Foreign key violation.";
+                    }else if (ex.getErrorCode() == -407) {
+                        message = "SQL Error: Type mismatch.";
+                    } else if (ex.getErrorCode() == -802||ex.getErrorCode() == -302||ex.getErrorCode() == -433) {
+                        message = "SQL Error: Overflow.";
+                    }
+                    JOptionPane.showMessageDialog(frame, message, "Error", JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        });
+
+        frame.setVisible(true);
+    }
     public static void main(String[] args) {
         SwingUtilities.invokeLater(()->{
             LabException labInsert = new LabException();

@@ -199,15 +199,12 @@ public class LabNull extends JFrame{
         button.setBounds(10,120,80,25);
         panel.add(button);
 
-        subQueryField = new JTextField("子查询",20);
-        panel.add(subQueryField);
-
         button.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 String sub = subQueryField.getText();
 
-                String sql = "insert into templ" + sub;
+                String sql = "insert into templ " + sub;
 
                 try {
                     Connection conn = getConnection();
