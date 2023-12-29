@@ -27,7 +27,7 @@ public class LabException extends JFrame{
      * GUI Component
      * */
 //    private JFrame mainFrame;
-    private JPanel mainPanel;
+    private final JPanel mainPanel;
     private JScrollPane scrollPane;
     private JTable table;
     private JTableHeader header;
@@ -35,9 +35,9 @@ public class LabException extends JFrame{
     /**
      * 插入按钮
      * */
-    private JButton bSingle;
-    private JButton bMul;
-    private JButton bSub;
+    private final JButton bSingle;
+    private final JButton bMul;
+    private final JButton bSub;
 
     /**
      * 单行插入文本框
@@ -121,8 +121,6 @@ public class LabException extends JFrame{
     }
 
     private DefaultTableModel buildTableModel(ResultSet resultSet) throws SQLException {
-
-
         ResultSetMetaData metaData = resultSet.getMetaData();
 
         // 获取列数
@@ -287,6 +285,7 @@ public class LabException extends JFrame{
             textAreas[i].setBounds(300 , 20 + ( i-labels.length/2)* 80, 100, 70);
             panel.add(textAreas[i]);
         }
+
         JButton button = new JButton("Insert");
         button.setBounds(10, 600, 80, 25);
         panel.add(button);

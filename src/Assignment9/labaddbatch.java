@@ -32,7 +32,7 @@ public class labaddbatch
 /**********************************************************************/
     /* Main routine                                                       */
     /**********************************************************************/
-    public static void main( String args[]) throws Exception
+    public static void main(String[] args) throws Exception
     {
         int outID = 0;
         String outname = " ";

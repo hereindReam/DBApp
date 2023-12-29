@@ -57,7 +57,7 @@ public class labupdate
 /**********************************************************************/
     /* Main routine                                                       */
     /**********************************************************************/
-    public static void main( String args[]) throws Exception
+    public static void main(String[] args) throws Exception
     {
 /***************************************** ****************************/
         /* Define variable declarations for the variable which will be used   */

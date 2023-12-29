@@ -27,35 +27,10 @@ public class LabNull extends JFrame{
      * GUI Component
      * */
 //    private JFrame mainFrame;
-    private JPanel mainPanel;
+    private final JPanel mainPanel;
     private JScrollPane scrollPane;
     private JTable table;
     private JTableHeader header;
-
-    /**
-     * 插入按钮
-     * */
-    private JButton bSingle;
-    private JButton bMul;
-    private JButton bSub;
-
-    /**
-     * 单行插入文本框
-     */
-    private JTextField[] singleInsertField;
-    private JTextField singleInsertField1;//empno
-    private JTextField singleInsertField2;//firstnme
-    private JTextField singleInsertField3;//lastname
-    private JTextField singleInsertField4;//edlevel
-
-    /**
-     * 多行插入
-     * */
-    private JTextArea[] mulInsertField;
-    private JTextArea mulNo;
-    private JTextArea mulFirstname;
-    private JTextArea mulLastname;
-    private JTextArea mulEdLevel;
 
     /**
      * 子查询插入
@@ -79,9 +54,12 @@ public class LabNull extends JFrame{
         //component
 
         this.scrollPane = new JScrollPane(table);
-        this.bSingle = new JButton("单行插入");
-        this.bMul = new JButton("多行插入");
-        this.bSub = new JButton("子查询插入");
+        /**
+         * 插入按钮
+         * */
+        JButton bSingle = new JButton("单行插入");
+        JButton bMul = new JButton("多行插入");
+        JButton bSub = new JButton("子查询插入");
 
         showTable();
 
@@ -96,14 +74,14 @@ public class LabNull extends JFrame{
         add(mainPanel,BorderLayout.EAST);
 
         //addListener
-        this.bSingle.addActionListener(new ActionListener() {
+        bSingle.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 singleActionPerformed(e);
                 showTable();
             }
         });
-        this.bMul.addActionListener(new ActionListener() {
+        bMul.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 MulActionPerformed(e);
@@ -111,7 +89,7 @@ public class LabNull extends JFrame{
             }
         });
 
-        this.bSub.addActionListener(new ActionListener() {
+        bSub.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 SubActionPerformed(e);

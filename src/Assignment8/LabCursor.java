@@ -2,6 +2,10 @@ package Assignment8;
 
 import javax.swing.*;
 
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
+import javax.swing.event.TableModelEvent;
+import javax.swing.event.TableModelListener;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
 import javax.swing.JTable;
@@ -12,6 +16,7 @@ import java.math.BigDecimal;
 import java.sql.*;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Vector;
 
 /*
 模仿下面截图设计并实现向表TEMPL插入行的操作，GUI界面要求实现单行插入、多行插入、通过子查询插入的功能。
@@ -27,35 +32,10 @@ public class LabCursor extends JFrame{
      * GUI Component
      * */
 //    private JFrame mainFrame;
-    private JPanel mainPanel;
+    private final JPanel mainPanel;
     private JScrollPane scrollPane;
     private JTable table;
     private JTableHeader header;
-
-    /**
-     * 插入按钮
-     * */
-    private JButton bSingle;
-    private JButton bMul;
-    private JButton bSub;
-
-    /**
-     * 单行插入文本框
-     */
-    private JTextField[] singleInsertField;
-    private JTextField singleInsertField1;//empno
-    private JTextField singleInsertField2;//firstnme
-    private JTextField singleInsertField3;//lastname
-    private JTextField singleInsertField4;//edlevel
-
-    /**
-     * 多行插入
-     * */
-    private JTextArea[] mulInsertField;
-    private JTextArea mulNo;
-    private JTextArea mulFirstname;
-    private JTextArea mulLastname;
-    private JTextArea mulEdLevel;
 
     /**
      * 子查询插入
@@ -78,10 +58,13 @@ public class LabCursor extends JFrame{
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         //component
 
-        this.scrollPane = new JScrollPane(table);
-        this.bSingle = new JButton("单行插入");
-        this.bMul = new JButton("多行插入");
-        this.bSub = new JButton("子查询插入");
+
+        /**
+         * 插入按钮
+         * */
+        JButton bSingle = new JButton("单行插入");
+        JButton bMul = new JButton("多行插入");
+        JButton bSub = new JButton("子查询插入");
 
         showTable();
 
@@ -96,27 +79,18 @@ public class LabCursor extends JFrame{
         add(mainPanel,BorderLayout.EAST);
 
         //addListener
-        this.bSingle.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                singleActionPerformed(e);
-                showTable();
-            }
+        bSingle.addActionListener(e -> {
+            singleActionPerformed(e);
+            showTable();
         });
-        this.bMul.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                MulActionPerformed(e);
-                showTable();
-            }
+        bMul.addActionListener(e -> {
+            MulActionPerformed(e);
+            showTable();
         });
 
-        this.bSub.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                SubActionPerformed(e);
-                showTable();
-            }
+        bSub.addActionListener(e -> {
+            SubActionPerformed(e);
+            showTable();
         });
     }
 
@@ -148,31 +122,66 @@ public class LabCursor extends JFrame{
         return tableModel;
     }
 
+
     private void showTable(){
         try {
-            Connection connection = getConnection();
 
-            String sql = "select * from templ";
-            Statement stm = connection.createStatement();
-            ResultSet rs = stm.executeQuery(sql);
+            Connection connection = DriverManager.getConnection(url,name,password);
+            connection.setAutoCommit(true);
+            // 查询数据库
+            Statement statement = connection.createStatement(ResultSet.TYPE_SCROLL_SENSITIVE,ResultSet.CONCUR_UPDATABLE);
+            ResultSet resultSet = statement.executeQuery("SELECT * FROM TEMPL ");
 
-            DefaultTableModel model = buildTableModel(rs);
+            // 创建 DefaultTableModel
+            DefaultTableModel model = new DefaultTableModel();
+            model.setRowCount(0);
+            ResultSetMetaData metaData = resultSet.getMetaData();
+            int columnCount = metaData.getColumnCount();
+            for (int i = 1; i <= columnCount; i++) {
+                model.addColumn(metaData.getColumnName(i));
+            }
+
+            // 将查询结果添加到 DefaultTableModel
+            while (resultSet.next()) {
+                Vector<Object> row = new Vector<Object>();
+                for (int i = 1; i <= columnCount; i++) {
+                    row.add(resultSet.getObject(i));
+                }
+                model.addRow(row);
+            }
+
+            // 创建 JTable
             table = new JTable(model);
-            scrollPane = new JScrollPane(table);
+            table.setCellSelectionEnabled(true);
 
-            getContentPane().add(scrollPane, BorderLayout.CENTER);
+            // 添加 TableModelListener
+            model.addTableModelListener(new TableModelListener() {
+                public void tableChanged(TableModelEvent e) {
+                    int row = e.getFirstRow();
+                    int column = e.getColumn();
+                    Object newValue = table.getValueAt(row, column);
+                    // 更新数据库
+                    try {
+                        resultSet.absolute(row+1);
+                        resultSet.updateObject(column+1,newValue);
+                        resultSet.updateRow();
+                        connection.commit();
+                    } catch (SQLException ex) {
+                        throw new RuntimeException(ex);
+                    }
 
-            setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-            setVisible(true);
 
-            connection.close();
-        } catch (ClassNotFoundException e) {
-            throw new RuntimeException(e);
+                }
+            });
+
+            // 显示 JTable
+            this.scrollPane = new JScrollPane(table);
+
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            e.printStackTrace();
         }
-
     }
+
 
 
     // TODO: 2023/12/8  在插入后要更改表的内容
@@ -199,27 +208,24 @@ public class LabCursor extends JFrame{
         button.setBounds(10,120,80,25);
         panel.add(button);
 
-        button.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                String sub = subQueryField.getText();
+        button.addActionListener(e1 -> {
+            String sub1 = subQueryField.getText();
 
-                String sql = "insert into TEMPL " + sub;
+            String sql = "insert into TEMPL " + sub1;
 
-                try {
-                    Connection conn = getConnection();
-                    PreparedStatement pstmt = conn.prepareStatement(sql);
-                    pstmt.executeUpdate();
+            try {
+                Connection conn = getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(sql);
+                pstmt.executeUpdate();
 
-                    pstmt.close();
-                    conn.close();
-                } catch (ClassNotFoundException ex) {
-                    throw new RuntimeException(ex);
-                } catch (SQLException ex) {
-                    throw new RuntimeException(ex);
-                }
-
+                pstmt.close();
+                conn.close();
+            } catch (ClassNotFoundException ex) {
+                throw new RuntimeException(ex);
+            } catch (SQLException ex) {
+                throw new RuntimeException(ex);
             }
+
         });
         frame.setVisible(true);
     }
@@ -448,8 +454,8 @@ public class LabCursor extends JFrame{
     }
     public static void main(String[] args) {
         SwingUtilities.invokeLater(()->{
-            Assignment5.LabInsert labInsert = new Assignment5.LabInsert();
-            labInsert.setVisible(true);
+            LabCursor cursor = new LabCursor();
+            cursor.setVisible(true);
         });
     }
 }

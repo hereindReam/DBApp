@@ -49,7 +49,7 @@ public class labstaff
 /**********************************************************************/
     /* Main routine                                                       */
     /**********************************************************************/
-    public static void main( String args[]) throws Exception
+    public static void main(String[] args) throws Exception
     {
 /*********************** ????????????????? ****************************/
         /* Define variable declarations for the variable which will be used   */
@@ -84,7 +84,7 @@ public class labstaff
         Connection connect = DriverManager.getConnection("jdbc:db2:sample","db2admin","student");
         System.out.println("Connect completed");
         connect.setAutoCommit(false);
-  
+
         /**************************************************/
         /*  Print instruction lines                       */
         /* Write out the header line                      */

@@ -142,12 +142,6 @@ public class LabBLOB extends JFrame {
         });
 
         OkButton.addActionListener(e -> {
-            /*JFileChooser fileChooser = new JFileChooser();
-            int returnValue = fileChooser.showOpenDialog(null);
-            if (returnValue == JFileChooser.APPROVE_OPTION) {
-                File selectedFile = fileChooser.getSelectedFile();
-                insert(selectedFile,noField.getText(),formatField.getText());
-            }*/
             insert(selectedFile[0],noField.getText(),formatField.getText());
         });
 
